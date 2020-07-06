@@ -15,28 +15,19 @@ __Classification algorithm:__ Random forest
 Credit: Thank you Zena Lapp for your live-coding scripts. 
 
 1. First thing we do is download the dataset: There are 2 ways of doing this:
+
       - Clone this repository on your terminal in Mac or Git Bash on Windows if you have it.
-      
-      ```
-      git clone https://github.com/um-dang/machine-learning-pipelines-r.git
-      ```
-      
-      - Create a folder in your Documents directory called `machine-learninig-pipelines-r`. Then within that folder, create another folder called `data`. Download the data [here](https://tinyurl.com/yyqywozj), then move the `data.tsv` file you downloaded into `data` folder.
 
 __3. Open RStudio.__ Go to `File` tab, click on `New Project`, create a project on `Existing Directory`, navigate to `machine-learninig-pipelines-r` directory and start the new project. Now you can open a New R script clicking on the green plus in RStudio. 
 
 __4. First we will load packages.__ If you haven't installed the packages before, please go to your RStudio console:
-
-  ```install.packages('randomForest')```
   
   ```install.packages('caret')```
-
-  ```install.packages('tidyverse')```
 
 If you already installed these all you have to type  now is:
 
   ```
-  library(randomForest)
+  library(caret)
   ```
 
 __5. We are now ready to read in our data.__
@@ -96,14 +87,6 @@ Why are we doing this? Because to have a reliable model, we need to follow the M
 
 We need to have a held-out test data, that will not be used for training the model. To create a training dataset and a held-out test dataset we need to make changes to our dataset. 
 
-  - First we need to change our label column to a factor. Random forest needs the label to be a factor if we want to do classification modeling. We are classifying `having cancer` or `not having cancer`.
-
-    ```
-    # change the label to a factor (categorical variable) instead of a character 
-    
-    data$cancer = as.factor(data$cancer)
-    ```
-
    - Randomly order samples. 
    ```
    random_ordered <- data[sample(nrow(data)),]
@@ -114,6 +97,14 @@ We need to have a held-out test data, that will not be used for training the mod
   number_training_samples <- ceiling(nrow(random_ordered) * 0.8)
   ```
 
+  - We first need to change the numeric outcomes to a string. Caret doesn't like having numeric outcome variables. 
+  
+      ```
+      data$cancer <- ifelse(data$cancer == 1, "cancer", "normal")
+      ```
+
+  
+  
    - Create training set:
    ```
    train <- random_ordered[1:number_training_samples,]
@@ -123,58 +114,8 @@ We need to have a held-out test data, that will not be used for training the mod
   ```
   test <- random_ordered[(number_training_samples + 1):nrow(random_ordered),]
   ```
-  
-  Now we have 1 datasplit where 80% of the data will be used to train and 20% of the data will be held-out to test on once the model is trained and ready to go. 
-  
- 10. Train the model on training data. 
  
- ```
-# Default mtry = max(floor(ncol(data)/3), 1)
-# Default ntree =  500
-rf_train = randomForest(cancer ~ ., 
-                        data = train, 
-                        ntree = 500, 
-                        mtry=500) 
-```
-
-11. How does our model do? We need to test on the held-out 20%. We use a `predict` function part of the `randomForest` package. 
-
-```
-test_pred = predict(rf_train, test)
-```
-
-How do we access this prediction? To do that let's write a function to calculate the accuracy of our model.
-
-```
-# function to compare predicted to actual class
-
-check_pred_class = function(dat, pred){
-
-  # correct answers
-  actual = data.frame(id = rownames(dat), cancer = dat$cancer)
-  
-  # predicted answers
-  predicted = data.frame(id = rownames(dat), cancer = pred)
-  
-  # compare predicted to actual
-  comparison = merge(actual, predicted, by = 'id', all = F)
-  
-  # fraction correct
-  sum(comparison$cancer.x == comparison$cancer.y)/nrow(comparison)
-  
-}
-```
-
-Now we have the acutal `test` data and the predicted `test_pred`. Let's use our function to calcuate the accuracy of our model.
-```
-check_pred_class(test, test_pred)
-[1] 0.7758621
-```
-#### So we predict accurately %78 of the time. Is that good enough?
-
-### How well did we follow our ML pipeline from Figure 1?
-
-### What if we want to do better with our pipeline and also test many different models and not just random forest.
+ 
 
  Let's look at the `caret` package which is a helpful wrapper that makes our life easier!
 
@@ -184,12 +125,6 @@ check_pred_class(test, test_pred)
 
  ```
  library(caret)
-```
-
-2. We first need to change the numeric outcomes to a string. Caret doesn't like having numeric outcome variables. 
-```
-train$cancer <- ifelse(train$cancer == 1, "cancer", "normal")
-test$cancer <- ifelse(test$cancer == 1, "cancer", "normal")
 ```
 
 3. The syntax for training `caret` models is a little different than what we used before. Because we can use many different models here, they created a generic `train` function. We define what the training `data` is, then the `method` as random forest. We also define which `metric` we want to use to evaluate the model. You can look at what options you have with caret here: http://topepo.github.io/caret/index.html.
