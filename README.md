@@ -128,11 +128,11 @@ __11. Load the caret package:__
 
 __12.__ The syntax for training `caret` models is a little different than what we used before. Because we can use many different models here, they created a generic `train` function. We define what the training `data` is, then the `method` as random forest. We also define which `metric` we want to use to evaluate the model. You can look at what options you have with caret here: http://topepo.github.io/caret/index.html.
 
-      We also choose to do a better job with out pipeline by adding a cross-validation step to our training step. 
+We also choose to do a better job with out pipeline by adding a cross-validation step to our training step. 
 
-      - Let's create a cross-validation scheme. This is an internal data-split to create a better model where we test different `mtry` parameters and decide which one is better.
+- Let's create a cross-validation scheme. This is an internal data-split to create a better model where we test different `mtry` parameters and decide which one is better.
       
-      - How many folds will there be in our cross-validation step? If we pick `5` then 80% of the data will be used to train and 20% will be used to test different `mtry` options. This will be repeated until each fold is tested. (This is an internal datasplit which is applied after the first outer datasplit to create held-out dataset)
+- How many folds will there be in our cross-validation step? If we pick `5` then 80% of the data will be used to train and 20% will be used to test different `mtry` options. This will be repeated until each fold is tested. (This is an internal datasplit which is applied after the first outer datasplit to create held-out dataset)
       
       ```
       cv <- trainControl(method="cv", number=5)
