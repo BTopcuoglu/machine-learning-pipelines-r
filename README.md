@@ -6,13 +6,12 @@ __Feaures:__ 16S rRNA gene abundances clustered to OTUs (represent bacterial abu
 
 __Label:__ Health outcome (whether the patient has colorectal cancer or not)
 
-__Classification algorithm:__ Random forest
+__Classification algorithm:__ Logistic Regression
 
 - Data from: https://github.com/SchlossLab/Sze_CRCMetaAnalysis_mBio_2018
-- Modified from: https://github.com/BTopcuoglu/MachineLearning/blob/master/code/learning/model_pipeline.R
-- Further reading on this project: https://www.biorxiv.org/content/10.1101/816090v1
-
-Credit: Thank you Zena Lapp for your live-coding scripts. 
+- ML pipeline modified from: https://github.com/SchlossLab/mikRopML
+- Further reading on this project: https://mbio.asm.org/content/11/3/e00434-20
+**Credit:** Thank you **Zena Lapp** for your live-coding scripts. 
 
 1. First thing we do is download the dataset: There are 2 ways of doing this:
 
@@ -77,7 +76,15 @@ sum(is.na(data))
 ```
 Since we don't have any missing data, we don't have to remove any of the samples. 
 
-__9. Split data into train and test set:__
+__9. Refactor parts of the data__
+
+We need to change the numeric outcomes to a string. Caret doesn't like having numeric outcome variables. 
+  
+```
+data$cancer <- ifelse(data$cancer == 1, "cancer", "normal")
+```
+
+__10. Split data into train and test set:__
 
 The next step is to split the data into a training set (80% of the data) and a test set (20% of the data). We will make a random forest model using the training set and then test the model using the test set.
 
@@ -96,14 +103,6 @@ We need to have a held-out test data, that will not be used for training the mod
    ```
   number_training_samples <- ceiling(nrow(random_ordered) * 0.8)
   ```
-
-  - We first need to change the numeric outcomes to a string. Caret doesn't like having numeric outcome variables. 
-  
-      ```
-      data$cancer <- ifelse(data$cancer == 1, "cancer", "normal")
-      ```
-
-  
   
    - Create training set:
    ```
@@ -121,13 +120,13 @@ We need to have a held-out test data, that will not be used for training the mod
 
  `Caret` package is short for Classification And REgression Training) is a set of functions that attempt to streamline the process for creating predictive models. The package contains tools for all the steps of machine learning. 
 
-1. Load the caret package:
+__11. Load the caret package:__
 
  ```
  library(caret)
 ```
 
-3. The syntax for training `caret` models is a little different than what we used before. Because we can use many different models here, they created a generic `train` function. We define what the training `data` is, then the `method` as random forest. We also define which `metric` we want to use to evaluate the model. You can look at what options you have with caret here: http://topepo.github.io/caret/index.html.
+__12.__ The syntax for training `caret` models is a little different than what we used before. Because we can use many different models here, they created a generic `train` function. We define what the training `data` is, then the `method` as random forest. We also define which `metric` we want to use to evaluate the model. You can look at what options you have with caret here: http://topepo.github.io/caret/index.html.
 
       We also choose to do a better job with out pipeline by adding a cross-validation step to our training step. 
 
@@ -141,55 +140,35 @@ We need to have a held-out test data, that will not be used for training the mod
       - What `mtry` options are we trying in cross-validation?
       
       ```
-      grid <-  expand.grid(mtry = c(500, 1000))
+      grid <-  expand.grid(cost = c(10, 1, 0.1, 0.01, 0.001),
+                           loss = "L2_primal",
+                           epsilon = 0.01)
       ```
       - Let's train the model:
 
       ```
       trained_model <-  train(cancer ~ .,
                         data=train,
-                        method = "rf",
+                        method = "regLogistic",
                         metric = "Accuracy",
                         tuneGrid = grid,
                         trControl = cv,
-                        ntree=500,
-                        returnResamp="final") # not tuning ntree
+                        returnResamp="final") 
       ```
-4. Our model is trained and we can see how each `mtry` did. 
+4. Our model is trained and we can see how each `cost` hyperparameter did. 
 
 ```
 trained_model
 ```
 
-```
-Random Forest 
-
- 234 samples
-5206 predictors
-   2 classes: 'cancer', 'normal' 
-
-No pre-processing
-Resampling: Cross-Validated (5 fold) 
-Summary of sample sizes: 187, 187, 187, 188, 187 
-Resampling results across tuning parameters:
-
-  mtry  Accuracy   Kappa    
-   500  0.7393154  0.4175905
-  1000  0.7435708  0.4279107
-
-Accuracy was used to select the optimal model using the largest value.
-The final value used for the model was mtry = 1000.
-```
-
-So, `mtry=1000` was better than `mtry=500` and cross-validation step helped us recognize that. `Caret` package automatically trained on the full training data with `mtry=1000` after determining that it was the best one.
 
 5. Now we have the trained model and our model picked the best `mtry` to use, let's predict on test set.
 ```
-rf_pred <- predict(trained_model, test)
+logit_pred <- predict(trained_model, test)
 ```
 6. Let's see how the model did. We can use the `confusionMatrix` function in the `caret` package.
 ```
-confusionMatrix(rf_pred, as.factor(test$cancer))
+confusionMatrix(logit_pred, as.factor(test$cancer))
 ```
 
 ```
