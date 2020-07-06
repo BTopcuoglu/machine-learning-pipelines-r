@@ -86,7 +86,7 @@ data$cancer <- ifelse(data$cancer == 1, "cancer", "normal")
 
 __10. Split data into train and test set:__
 
-The next step is to split the data into a training set (80% of the data) and a test set (20% of the data). We will make a random forest model using the training set and then test the model using the test set.
+The next step is to split the data into a training set (80% of the data) and a test set (20% of the data). We will make a logistic regression model using the training set and then test the model using the test set.
 
 Why are we doing this? Because to have a reliable model, we need to follow the ML pipeline seen in Figure 1.
 
@@ -126,47 +126,52 @@ __11. Load the caret package:__
  library(caret)
 ```
 
-__12.__ The syntax for training `caret` models is a little different than what we used before. Because we can use many different models here, they created a generic `train` function. We define what the training `data` is, then the `method` as random forest. We also define which `metric` we want to use to evaluate the model. You can look at what options you have with caret here: http://topepo.github.io/caret/index.html.
+__12.__ The syntax for training `caret` models is a little different than what we used before. Because we can use many different models here, they created a generic `train` function. We define what the training `data` is, then the `method` as regularized logistic regression. We also define which `metric` we want to use to evaluate the model. You can look at what options you have with caret here: http://topepo.github.io/caret/index.html.
 
 We also choose to do a better job with out pipeline by adding a cross-validation step to our training step. 
 
-- Let's create a cross-validation scheme. This is an internal data-split to create a better model where we test different `mtry` parameters and decide which one is better.
+- Let's create a cross-validation scheme. This is an internal data-split to create a better model where we test different `cost` parameters and decide which one is better.
       
-- How many folds will there be in our cross-validation step? If we pick `5` then 80% of the data will be used to train and 20% will be used to test different `mtry` options. This will be repeated until each fold is tested. (This is an internal datasplit which is applied after the first outer datasplit to create held-out dataset)
+- How many folds will there be in our cross-validation step? If we pick `5` then 80% of the data will be used to train and 20% will be used to test different `cost` options. This will be repeated until each fold is tested. (This is an internal datasplit which is applied after the first outer datasplit to create held-out dataset)
       
-      ```
-      cv <- trainControl(method="cv", number=5)
-      ```
-      - What `mtry` options are we trying in cross-validation?
+ ```
+ cv <- trainControl(method="cv", number=5)
+ ```
+     
+ - What `cost` options are we trying in cross-validation?
       
-      ```
-      grid <-  expand.grid(cost = c(10, 1, 0.1, 0.01, 0.001),
+ ```
+ grid <-  expand.grid(cost = c(10, 1, 0.1, 0.01, 0.001),
                            loss = "L2_primal",
                            epsilon = 0.01)
-      ```
-      - Let's train the model:
+ ```
+    
+- Let's train the model:
 
-      ```
-      trained_model <-  train(cancer ~ .,
+```
+trained_model <-  train(cancer ~ .,
                         data=train,
                         method = "regLogistic",
                         metric = "Accuracy",
                         tuneGrid = grid,
                         trControl = cv,
                         returnResamp="final") 
-      ```
-4. Our model is trained and we can see how each `cost` hyperparameter did. 
+```
+
+13. Our model is trained and we can see how each `cost` hyperparameter did. 
 
 ```
 trained_model
 ```
 
+14. Now we have the trained model and our model picked the best `mtry` to use, let's predict on test set.
 
-5. Now we have the trained model and our model picked the best `mtry` to use, let's predict on test set.
 ```
 logit_pred <- predict(trained_model, test)
 ```
-6. Let's see how the model did. We can use the `confusionMatrix` function in the `caret` package.
+
+15. Let's see how the model did. We can use the `confusionMatrix` function in the `caret` package.
+
 ```
 confusionMatrix(logit_pred, as.factor(test$cancer))
 ```
