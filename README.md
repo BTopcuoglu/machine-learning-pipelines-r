@@ -2,15 +2,18 @@
 
 Our goal is to try to predict whether someone has colorectal cancer based on the abundance of different bacteria in their stool microbiome.
 
+This tutorial is just for demonstration purposes and for live-coding section of ASM Microbe presentation. Please go to the provided links for further reading.
+
 __Feaures:__ 16S rRNA gene abundances clustered to OTUs (represent bacterial abundances)
 
 __Label:__ Health outcome (whether the patient has colorectal cancer or not)
 
-__Classification algorithm:__ Logistic Regression
+__Classification algorithm:__ Regularized Logistic Regression
 
 - Data from: https://github.com/SchlossLab/Sze_CRCMetaAnalysis_mBio_2018
-- ML pipeline modified from: https://github.com/SchlossLab/mikRopML
+- The robust ML pipeline with the best practices can be found: https://github.com/SchlossLab/mikRopML
 - Further reading on this project: https://mbio.asm.org/content/11/3/e00434-20
+
 **Credit:** Thank you **Zena Lapp** for your live-coding scripts. 
 
 1. First thing we do is download the dataset: There are 2 ways of doing this:
