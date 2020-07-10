@@ -93,6 +93,8 @@ The next step is to split the data into a training set (80% of the data) and a t
 
 Why are we doing this? Because to have a reliable model, we need to follow the ML pipeline seen in Figure 1.
 
+Ideally this is the pipeline we need to follow, where we are repeating the modeling experiment many times. Due to time contraints at the conference, we are doing only a portion of this pipeline. Please go to https://github.com/SchlossLab/mikRopML if you want to implement this pipeline for your project.
+
 ![Figure 1. Machine Learning Pipeline](Figure_1.png)
 
 We need to have a held-out test data, that will not be used for training the model. To create a training dataset and a held-out test dataset we need to make changes to our dataset. 
